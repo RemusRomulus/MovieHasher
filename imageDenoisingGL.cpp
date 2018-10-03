@@ -86,6 +86,11 @@ uchar4 *h_Src;
 int imageW, imageH;
 GLuint shader;
 
+//Source the hasher image on host side
+uchar4 *h_hash_src;
+int imgHashDim;
+GLuint hashShader;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Main program
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,6 +188,14 @@ void runImageFilters(TColor *d_dst)
             {
                 cuda_NLM2diag(d_dst, imageW, imageH, 1.0f / (nlmNoise * nlmNoise), lerpC);
             }
+		case 5:
+			if (!g_Diag)
+			{
+
+			}
+			else
+			{
+			}
 
             break;
     }
@@ -294,6 +307,11 @@ void keyboard(unsigned char k, int /*x*/, int /*y*/)
             printf("Quick NLM(NLM2) method\n");
             g_Kernel = 3;
             break;
+
+		case '5':
+			printf("Experimental Hashing - Phase 1");
+			g_Kernel = 5;
+			break;
 
         case '*':
             printf(g_Diag ? "LERP highlighting mode.\n" : "Normal mode.\n");
