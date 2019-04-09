@@ -188,15 +188,10 @@ void runImageFilters(TColor *d_dst)
             {
                 cuda_NLM2diag(d_dst, imageW, imageH, 1.0f / (nlmNoise * nlmNoise), lerpC);
             }
+			break;
+
 		case 5:
-			if (!g_Diag)
-			{
-
-			}
-			else
-			{
-			}
-
+			cuda_HASH(d_dst, imageW, imageH);
             break;
     }
 
@@ -594,6 +589,7 @@ int main(int argc, char **argv)
     printf("Press [2] to view image restored with knn filter\n");
     printf("Press [3] to view image restored with nlm filter\n");
     printf("Press [4] to view image restored with modified nlm filter\n");
+	printf("Press [5] to view EXPERIMENTAL HASHING\n");
     printf("Press [*] to view smooth/edgy areas [RED/BLUE] Ct's when a filter is active\n");
     printf("Press [f] to print frame rate\n");
     printf("Press [?] to print Noise and Lerp Ct's\n");

@@ -108,6 +108,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bmploader.cpp" />
+    <ClInclude Include="imageDenoising_hasher_kernel.cuh" />
     <CudaCompile Include="imageDenoising.cu" />
     <ClCompile Include="imageDenoisingGL.cpp" />
     <ClInclude Include="imageDenoising.h" />

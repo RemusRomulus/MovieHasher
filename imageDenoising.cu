@@ -87,6 +87,7 @@ cudaArray *a_Src;
 #include "imageDenoising_knn_kernel.cuh"
 #include "imageDenoising_nlm_kernel.cuh"
 #include "imageDenoising_nlm2_kernel.cuh"
+#include "imageDenoising_hasher_kernel.cuh"
 
 extern "C"
 cudaError_t CUDA_Bind2TextureArray()

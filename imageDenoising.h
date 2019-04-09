@@ -59,4 +59,7 @@ extern "C" void cuda_NLMdiag(TColor *d_dst, int imageW, int imageH, float Noise,
 extern "C" void cuda_NLM2(TColor *d_dst, int imageW, int imageH, float Noise, float LerpC);
 extern "C" void cuda_NLM2diag(TColor *d_dst, int imageW, int imageH, float Noise, float LerpC);
 
+extern "C" void cuda_HASH(TColor *d_dst, int imageW, int imageH);
+//extern "C" void cuda_HASHdian(TColor *d_dst, int imageW, int imageH, float Noise, float LerpC);
+
 #endif
