@@ -25,6 +25,8 @@ __global__ void HASH(
 
 	if (ix < imageW && iy < imageH)
 	{
+		// Calling tex2D x*x times is slow
+		// TODO: learn to load image sections as pointer to array
 		float4 fresult = tex2D(texImage, x, y);
 		dst[imageW * iy + ix] = make_color(fresult.x, fresult.y, fresult.z, 0);
 	}

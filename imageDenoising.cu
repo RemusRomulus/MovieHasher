@@ -68,6 +68,12 @@ __device__ TColor make_color(float r, float g, float b, float a)
         ((int)(r * 255.0f) <<  0);
 }
 
+__device__ void uv_wrap(const int currX, const int currY, int &x, int &y, const int w, const int h)
+{
+	x = (currX >= w) ? currX - w : currX ;
+	y = (currY >= w) ? currY - h : currY ;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
