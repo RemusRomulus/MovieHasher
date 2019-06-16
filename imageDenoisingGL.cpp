@@ -87,8 +87,8 @@ int imageW, imageH;
 GLuint shader;
 
 //Source the hasher image on host side
-uchar4 *h_hash_src;
-int imgHashDim;
+uchar4 *hashHost_Src;
+int hashW, hashH;
 GLuint hashShader;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -461,6 +461,8 @@ void initOpenGLBuffers()
 void cleanup()
 {
     free(h_Src);
+	checkCudaErrors(CUDA_FreeArray());
+	free(hashHost_Src);
     checkCudaErrors(CUDA_FreeArray());
     checkCudaErrors(cudaGraphicsUnregisterResource(cuda_pbo_resource));
 
@@ -488,7 +490,21 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
     LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
     printf("Data init done.\n");
 
-    checkCudaErrors(CUDA_MallocArray(&h_Src, imageW, imageH));
+	// Second, load the hash, because we need that and so we can get the dimensions
+	printf("Allocating host and CUDA memory and loading hash file...\n");
+	const char *hash_path = sdkFindFilePath("hash.bmp", argv[0]);
+
+	if (hash_path == NULL)
+	{
+		printf("imageDenoisingGL was unable to find and load image file <hash.bmp>.\nExiting...\n");
+		exit(EXIT_FAILURE);
+	}
+
+	LoadBMPFile(&hashHost_Src, &hashW, &hashH, hash_path);
+	printf("Hash init done.\n");
+
+
+    checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
     TColor *d_dst = NULL;
     unsigned char *h_dst = NULL;
@@ -509,6 +525,7 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
 
     checkCudaErrors(CUDA_FreeArray());
     free(h_Src);
+	free(hashHost_Src);
 
     checkCudaErrors(cudaFree(d_dst));
     free(h_dst);
@@ -574,12 +591,25 @@ int main(int argc, char **argv)
         LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
         printf("Data init done.\n");
 
+		// Second, load the hash, because Duh and we want the image dimensions
+		printf("Allocating host and CUDA memory and loading hash file...\n");
+		const char *hash_path = sdkFindFilePath("hash.bmp", argv[0]);
+
+		if (image_path == NULL)
+		{
+			printf("imageDenoisingGL was unable to find and load image file <hash.bmp>.\nExiting...\n");
+			exit(EXIT_FAILURE);
+		}
+
+		LoadBMPFile(&hashHost_Src, &hashW, &hashH, hash_path);
+		printf("Data init done.\n");
+
         // First initialize OpenGL context, so we can properly set the GL for CUDA.
         // This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
         initGL(&argc, argv);
         cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 
-        checkCudaErrors(CUDA_MallocArray(&h_Src, imageW, imageH));
+        checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
         initOpenGLBuffers();
     }
