@@ -43,7 +43,7 @@ __global__ void HASH(
 		mod = fIntResult.z & 16 - 1;
 		rem = fIntResult.z - (mod * 16);
 		hB = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
-		dst[imageW * iy + ix] = make_color(hR.x/255.0f, hG.y / 255.0f, hB.z / 255.0f, 0);
+		dst[imageW * iy + ix] = make_color(hR.x, hG.y, hB.z, 0);
 	}
 }
 
