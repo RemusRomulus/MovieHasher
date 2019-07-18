@@ -1,25 +1,11 @@
-/*
- * Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
- *
- * Please refer to the NVIDIA end user license agreement (EULA) associated
- * with this source code for terms and conditions that govern your use of
- * this software. Any use, reproduction, disclosure, or distribution of
- * this software and related documentation outside the terms of the EULA
- * is strictly prohibited.
- *
- */
+/**
+Code Copyright: Andrew Britton
+Project: Movie Hasher
+2019
 
-
-
-/*
- * This sample demonstrates two adaptive image denoising techniques:
- * KNN and NLM, based on computation of both geometric and color distance
- * between texels. While both techniques are already implemented in the
- * DirectX SDK using shaders, massively speeded up variation
- * of the latter technique, taking advantage of shared memory, is implemented
- * in addition to DirectX counterparts.
- * See supplied whitepaper for more explanations.
- */
+Description:
+Movie Integrity generator
+*/
 
 
 // OpenGL Graphics includes
@@ -78,6 +64,8 @@ const char *sReference[] =
 ////////////////////////////////////////////////////////////////////////////////
 // Global data handlers and parameters
 ////////////////////////////////////////////////////////////////////////////////
+std::string test_image = "MovieSequence.000118.bmp";
+std::string out_image = "MovieSequence_Test.ppm";
 //OpenGL PBO and texture "names"
 GLuint gl_PBO, gl_Tex;
 struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
@@ -477,9 +465,11 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
 
     int devID = findCudaDevice(argc, (const char **)argv);
 
+	
+
     // First load the image, so we know what the size of the image (imageW and imageH)
     printf("Allocating host and CUDA memory and loading image file...\n");
-    const char *image_path = sdkFindFilePath("portrait_noise.bmp", argv[0]);
+    const char *image_path = sdkFindFilePath(test_image.c_str(), argv[0]);
 
     if (image_path == NULL)
     {
@@ -520,7 +510,7 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
         checkCudaErrors(cudaDeviceSynchronize());
 
         checkCudaErrors(cudaMemcpy(h_dst, d_dst, imageW*imageH*sizeof(TColor), cudaMemcpyDeviceToHost));
-        sdkSavePPM4ub(filename, h_dst, imageW, imageH);
+        sdkSavePPM4ub(std::string(out_image).c_str(), h_dst, imageW, imageH);
     }
 
     checkCudaErrors(CUDA_FreeArray());
@@ -554,7 +544,7 @@ int main(int argc, char **argv)
         getCmdLineArgumentString(argc, (const char **)argv,
                                  "file", (char **) &dump_file);
 
-        int kernel = 1;
+        int kernel = 5;
 
         if (checkCmdLineFlag(argc, (const char **)argv, "kernel"))
         {
@@ -580,7 +570,7 @@ int main(int argc, char **argv)
 
         // First load the image, so we know what the size of the image (imageW and imageH)
         printf("Allocating host and CUDA memory and loading image file...\n");
-        const char *image_path = sdkFindFilePath("portrait_noise.bmp", argv[0]);
+        const char *image_path = sdkFindFilePath("D:\\Commerce\\MovieHasher\\SequenceOne\\MovieSequence.000118.bmp", argv[0]);
 
         if (image_path == NULL)
         {

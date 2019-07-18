@@ -1,14 +1,15 @@
-/*
-* Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
-*
-* Please refer to the NVIDIA end user license agreement (EULA) associated
-* with this source code for terms and conditions that govern your use of
-* this software. Any use, reproduction, disclosure, or distribution of
-* this software and related documentation outside the terms of the EULA
-* is strictly prohibited.
-*
+/**
+Code Copyright: Andrew Britton
+Project: Movie Hasher
+2019
+
+Description:
+Movie Integrity generator
 */
 
+//TODO: Load a square texture area and aggregate over all points for final hash value
+//TODO: Randomize hasher image
+//TODO: Merge Prior and Current Hashes into alternating binary mesh
 
 
 __global__ void HASH(
