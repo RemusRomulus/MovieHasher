@@ -26,6 +26,7 @@ Movie Integrity generator
 #include <stdlib.h>
 #include <string.h>
 #include "imageDenoising.h"
+#include "Sequencer.h"
 
 // includes, project
 #include <helper_functions.h> // includes for helper utility functions
@@ -66,6 +67,10 @@ const char *sReference[] =
 ////////////////////////////////////////////////////////////////////////////////
 std::string test_image = "MovieSequence.000118.bmp";
 std::string out_image = "MovieSequence_Test.ppm";
+Sequencer sequencer(test_image);
+//TODO: Write sequence reader
+//TODO:
+
 //OpenGL PBO and texture "names"
 GLuint gl_PBO, gl_Tex;
 struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
