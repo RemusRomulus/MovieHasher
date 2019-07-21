@@ -45,7 +45,7 @@ public:
 
 	bool get_next_frame(std::string &next_frame, std::string &name_out)
 	{
-		if (current_frame < last_frame)
+		if (current_frame <= last_frame)
 		{
 			tmp_num = add_padding(current_frame);
 			next_frame = prefix + file_delim + tmp_num + file_delim + ext;
