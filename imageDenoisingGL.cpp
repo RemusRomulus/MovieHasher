@@ -464,7 +464,7 @@ void cleanup()
     sdkDeleteTimer(&timer);
 }
 
-void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
+void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, bool is_series=false)
 {
     printf("[%s] - (automated testing w/ readback)\n", sSDKsample);
 
@@ -527,7 +527,8 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
 
     printf("\n[%s] -> Kernel %d, Saved: %s\n", sSDKsample, kernel_param, filename);
 
-    exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+	if (!is_series)
+		exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 
@@ -556,7 +557,13 @@ int main(int argc, char **argv)
             kernel = getCmdLineArgumentInt(argc, (const char **)argv, "kernel");
         }
 
-        runAutoTest(argc, argv, dump_file, kernel);
+		bool tmp = true;
+		do
+		{
+			tmp = sequencer.get_next_frame(test_image, out_image);
+			if (tmp)
+				runAutoTest(argc, argv, dump_file, kernel, true);
+		} while (tmp);
     }
     else
     {

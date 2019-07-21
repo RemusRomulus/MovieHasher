@@ -1,7 +1,8 @@
 #pragma once
 #include <regex>
 #include <string>
-#include <experimental\filesystem>
+#include <experimental/filesystem>
+
 
 /** Sequencer
 */
@@ -30,6 +31,8 @@ public:
 		first_frame = std::stoi(frame);
 		digit_padding = frame.length();
 		current_frame = first_frame;
+		out_prefix = "_signature";
+		file_delim = ".";
 
 		get_last_frame();
 	}
@@ -40,7 +43,23 @@ public:
 	void operator=(Sequencer const&) = delete;
 
 
-	std::string get_next_frame();
+	bool get_next_frame(std::string &next_frame, std::string &name_out)
+	{
+		if (current_frame < last_frame)
+		{
+			tmp_num = add_padding(current_frame);
+			next_frame = prefix + file_delim + tmp_num + file_delim + ext;
+			name_out = prefix + out_prefix + file_delim + tmp_num + file_delim + "ppm";
+			current_frame++;
+			return true;
+		}
+		else
+		{
+			name_out = "";
+			next_frame = "";
+			return false;
+		}
+	}
 
 
 private:
@@ -52,19 +71,25 @@ private:
 		unsigned int i = current_frame + 1;
 		do
 		{
-			tmpname = prefix + add_padding(i) + ext;
+			tmpname = "C:\\ProgramData\\NVIDIA Corporation\\CUDA Samples\\v9.0\\3_Imaging\\MovieHasher\\data\\" + prefix + file_delim + add_padding(i) + file_delim + ext;
 			test = std::experimental::filesystem::exists(tmpname);
+			if (test)
+				i++;
+			else
+				i--;
 		} while (test);
-
+		last_frame = i;
 	}
 
 	std::string add_padding(int frame_num_in)
 	{
 		std::string outval = std::to_string(frame_num_in);
 
-		while (outval.length < digit_padding)
+		int length = outval.length();
+		while (length < digit_padding)
 		{
 			outval = "0" + outval;
+			length = outval.length();
 		}
 
 		return outval;
@@ -73,7 +98,7 @@ private:
 	std::string first_frame_name;
 	std::regex match_pattern = std::regex("([a-zA-Z]*).([0-9]*).(\\w{3})");
 	std::smatch first_frame_regex_results;
-	std::string prefix, ext;
+	std::string prefix, ext, out_prefix, tmp_num, file_delim;
 	int first_frame;
 	int last_frame;
 	int digit_padding;
