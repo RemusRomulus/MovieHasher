@@ -1,25 +1,11 @@
-/*
- * Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
- *
- * Please refer to the NVIDIA end user license agreement (EULA) associated
- * with this source code for terms and conditions that govern your use of
- * this software. Any use, reproduction, disclosure, or distribution of
- * this software and related documentation outside the terms of the EULA
- * is strictly prohibited.
- *
- */
+/**
+Code Copyright: Andrew Britton
+Project: Movie Hasher
+2019
 
-
-
-/*
- * This sample demonstrates two adaptive image denoising techniques:
- * KNN and NLM, based on computation of both geometric and color distance
- * between texels. While both techniques are already implemented in the
- * DirectX SDK using shaders, massively speeded up variation
- * of the latter technique, taking advantage of shared memory, is implemented
- * in addition to DirectX counterparts.
- * See supplied whitepaper for more explanations.
- */
+Description:
+Movie Integrity generator
+*/
 
 
 // OpenGL Graphics includes
@@ -40,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "imageDenoising.h"
+#include "Sequencer.h"
 
 // includes, project
 #include <helper_functions.h> // includes for helper utility functions
@@ -78,6 +65,12 @@ const char *sReference[] =
 ////////////////////////////////////////////////////////////////////////////////
 // Global data handlers and parameters
 ////////////////////////////////////////////////////////////////////////////////
+std::string test_image = "MovieSequence.000118.bmp";
+std::string out_image = "MovieSequence_Test.ppm";
+Sequencer sequencer(test_image);
+//TODO: Write sequence reader
+//TODO:
+
 //OpenGL PBO and texture "names"
 GLuint gl_PBO, gl_Tex;
 struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
@@ -87,8 +80,8 @@ int imageW, imageH;
 GLuint shader;
 
 //Source the hasher image on host side
-uchar4 *h_hash_src;
-int imgHashDim;
+uchar4 *hashHost_Src;
+int hashW, hashH;
 GLuint hashShader;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -461,6 +454,8 @@ void initOpenGLBuffers()
 void cleanup()
 {
     free(h_Src);
+	checkCudaErrors(CUDA_FreeArray());
+	free(hashHost_Src);
     checkCudaErrors(CUDA_FreeArray());
     checkCudaErrors(cudaGraphicsUnregisterResource(cuda_pbo_resource));
 
@@ -469,15 +464,17 @@ void cleanup()
     sdkDeleteTimer(&timer);
 }
 
-void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
+void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, bool is_series=false)
 {
     printf("[%s] - (automated testing w/ readback)\n", sSDKsample);
 
     int devID = findCudaDevice(argc, (const char **)argv);
 
+	
+
     // First load the image, so we know what the size of the image (imageW and imageH)
     printf("Allocating host and CUDA memory and loading image file...\n");
-    const char *image_path = sdkFindFilePath("portrait_noise.bmp", argv[0]);
+    const char *image_path = sdkFindFilePath(test_image.c_str(), argv[0]);
 
     if (image_path == NULL)
     {
@@ -488,7 +485,21 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
     LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
     printf("Data init done.\n");
 
-    checkCudaErrors(CUDA_MallocArray(&h_Src, imageW, imageH));
+	// Second, load the hash, because we need that and so we can get the dimensions
+	printf("Allocating host and CUDA memory and loading hash file...\n");
+	const char *hash_path = sdkFindFilePath("hash.bmp", argv[0]);
+
+	if (hash_path == NULL)
+	{
+		printf("imageDenoisingGL was unable to find and load image file <hash.bmp>.\nExiting...\n");
+		exit(EXIT_FAILURE);
+	}
+
+	LoadBMPFile(&hashHost_Src, &hashW, &hashH, hash_path);
+	printf("Hash init done.\n");
+
+
+    checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
     TColor *d_dst = NULL;
     unsigned char *h_dst = NULL;
@@ -504,18 +515,20 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param)
         checkCudaErrors(cudaDeviceSynchronize());
 
         checkCudaErrors(cudaMemcpy(h_dst, d_dst, imageW*imageH*sizeof(TColor), cudaMemcpyDeviceToHost));
-        sdkSavePPM4ub(filename, h_dst, imageW, imageH);
+        sdkSavePPM4ub(std::string(out_image).c_str(), h_dst, imageW, imageH);
     }
 
     checkCudaErrors(CUDA_FreeArray());
     free(h_Src);
+	free(hashHost_Src);
 
     checkCudaErrors(cudaFree(d_dst));
     free(h_dst);
 
     printf("\n[%s] -> Kernel %d, Saved: %s\n", sSDKsample, kernel_param, filename);
 
-    exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+	if (!is_series)
+		exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 
@@ -537,14 +550,20 @@ int main(int argc, char **argv)
         getCmdLineArgumentString(argc, (const char **)argv,
                                  "file", (char **) &dump_file);
 
-        int kernel = 1;
+        int kernel = 5;
 
         if (checkCmdLineFlag(argc, (const char **)argv, "kernel"))
         {
             kernel = getCmdLineArgumentInt(argc, (const char **)argv, "kernel");
         }
 
-        runAutoTest(argc, argv, dump_file, kernel);
+		bool tmp = true;
+		do
+		{
+			tmp = sequencer.get_next_frame(test_image, out_image);
+			if (tmp)
+				runAutoTest(argc, argv, dump_file, kernel, true);
+		} while (tmp);
     }
     else
     {
@@ -563,7 +582,7 @@ int main(int argc, char **argv)
 
         // First load the image, so we know what the size of the image (imageW and imageH)
         printf("Allocating host and CUDA memory and loading image file...\n");
-        const char *image_path = sdkFindFilePath("portrait_noise.bmp", argv[0]);
+        const char *image_path = sdkFindFilePath("D:\\Commerce\\MovieHasher\\SequenceOne\\MovieSequence.000118.bmp", argv[0]);
 
         if (image_path == NULL)
         {
@@ -574,12 +593,25 @@ int main(int argc, char **argv)
         LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
         printf("Data init done.\n");
 
+		// Second, load the hash, because Duh and we want the image dimensions
+		printf("Allocating host and CUDA memory and loading hash file...\n");
+		const char *hash_path = sdkFindFilePath("hash.bmp", argv[0]);
+
+		if (image_path == NULL)
+		{
+			printf("imageDenoisingGL was unable to find and load image file <hash.bmp>.\nExiting...\n");
+			exit(EXIT_FAILURE);
+		}
+
+		LoadBMPFile(&hashHost_Src, &hashW, &hashH, hash_path);
+		printf("Data init done.\n");
+
         // First initialize OpenGL context, so we can properly set the GL for CUDA.
         // This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
         initGL(&argc, argv);
         cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 
-        checkCudaErrors(CUDA_MallocArray(&h_Src, imageW, imageH));
+        checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
         initOpenGLBuffers();
     }

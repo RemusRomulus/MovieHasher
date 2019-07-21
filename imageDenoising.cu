@@ -83,8 +83,12 @@ __device__ void uv_wrap(const int currX, const int currY, int &x, int &y, const 
 texture<uchar4, 2, cudaReadModeNormalizedFloat> texImage;
 cudaChannelFormatDesc uchar4tex = cudaCreateChannelDesc<uchar4>();
 
+texture<uchar4, 2, cudaReadModeNormalizedFloat> hashImage;
+cudaChannelFormatDesc uchar4hash = cudaCreateChannelDesc<uchar4>();
+
 //CUDA array descriptor
 cudaArray *a_Src;
+cudaArray *hash_Src;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Filtering kernels
@@ -98,17 +102,26 @@ cudaArray *a_Src;
 extern "C"
 cudaError_t CUDA_Bind2TextureArray()
 {
-    return cudaBindTextureToArray(texImage, a_Src);
+	cudaError_t out = cudaBindTextureToArray(texImage, a_Src);
+    if(out !=0)
+	{
+		return out;
+	}
+	return cudaBindTextureToArray(hashImage, hash_Src);
 }
 
 extern "C"
 cudaError_t CUDA_UnbindTexture()
 {
-    return cudaUnbindTexture(texImage);
+	cudaError_t out = cudaUnbindTexture(texImage);
+	if (out != 0)
+		return out;
+	return cudaUnbindTexture(hashImage);
 }
 
 extern "C"
-cudaError_t CUDA_MallocArray(uchar4 **h_Src, int imageW, int imageH)
+cudaError_t CUDA_MallocArray(uchar4 **h_Src, uchar4 **hashHost_Src, int imageW, int imageH,
+	int hashW, int hashH)
 {
     cudaError_t error;
 
@@ -118,6 +131,12 @@ cudaError_t CUDA_MallocArray(uchar4 **h_Src, int imageW, int imageH)
                               cudaMemcpyHostToDevice
                              );
 
+	error = cudaMallocArray(&hash_Src, &uchar4hash, hashW, hashH);
+	error = cudaMemcpyToArray(hash_Src, 0, 0,
+		*hashHost_Src, hashW * hashH * sizeof(uchar4),
+		cudaMemcpyHostToDevice
+	);
+
     return error;
 }
 
@@ -125,6 +144,9 @@ cudaError_t CUDA_MallocArray(uchar4 **h_Src, int imageW, int imageH)
 extern "C"
 cudaError_t CUDA_FreeArray()
 {
-    return cudaFreeArray(a_Src);
+	cudaError_t out = cudaFreeArray(a_Src);
+	if (out != 0)
+		return out;
+	return cudaFreeArray(hash_Src);
 }
 

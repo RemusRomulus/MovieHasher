@@ -1,14 +1,15 @@
-/*
-* Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
-*
-* Please refer to the NVIDIA end user license agreement (EULA) associated
-* with this source code for terms and conditions that govern your use of
-* this software. Any use, reproduction, disclosure, or distribution of
-* this software and related documentation outside the terms of the EULA
-* is strictly prohibited.
-*
+/**
+Code Copyright: Andrew Britton
+Project: Movie Hasher
+2019
+
+Description:
+Movie Integrity generator
 */
 
+//TODO: Load a square texture area and aggregate over all points for final hash value
+//TODO: Randomize hasher image
+//TODO: Merge Prior and Current Hashes into alternating binary mesh
 
 
 __global__ void HASH(
@@ -28,7 +29,22 @@ __global__ void HASH(
 		// Calling tex2D x*x times is slow
 		// TODO: learn to load image sections as pointer to array
 		float4 fresult = tex2D(texImage, x, y);
-		dst[imageW * iy + ix] = make_color(fresult.x, fresult.y, fresult.z, 0);
+		//int4 fIntResult = int4(fresult) * 255;
+		int4 fIntResult;
+		fIntResult.x = __float2int_rz(fresult.x * 255.0f);
+		fIntResult.y = __float2int_rz(fresult.y * 255.0f);
+		fIntResult.z = __float2int_rz(fresult.z * 255.0f);
+		float4 hR, hG, hB;
+		int mod = fIntResult.x & 16 - 1;
+		int rem = fIntResult.x - (mod * 16);
+		hR = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
+		mod = fIntResult.y & 16 - 1;
+		rem = fIntResult.y - (mod * 16);
+		hG = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
+		mod = fIntResult.z & 16 - 1;
+		rem = fIntResult.z - (mod * 16);
+		hB = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
+		dst[imageW * iy + ix] = make_color(hR.x, hG.y, hB.z, 0);
 	}
 }
 

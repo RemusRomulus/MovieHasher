@@ -4,3 +4,14 @@
 *.ptx
 *.cubin
 *.fatbin
+*.bmp
+*.ppm
+!hash.bmp
+*.jpg
+*.psd
+*.VC.*
+/Results
+/.vs
+/x64
+*.pdb
+*.vcxproj.user
