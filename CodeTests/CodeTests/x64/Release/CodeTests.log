@@ -1,0 +1,9 @@
+﻿  Tests.cpp
+c:\programdata\nvidia corporation\cuda samples\v9.0\3_imaging\moviehasher\codetests\codetests\../../Sequencer.h(32): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\programdata\nvidia corporation\cuda samples\v9.0\3_imaging\moviehasher\codetests\codetests\../../Sequencer.h(88): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\programdata\nvidia corporation\cuda samples\v9.0\3_imaging\moviehasher\codetests\codetests\../../Sequencer.h(92): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  Generating code
+  All 1129 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  CodeTests.vcxproj -> C:\ProgramData\NVIDIA Corporation\CUDA Samples\v9.0\3_Imaging\MovieHasher\x64\Release\CodeTests.exe
+  CodeTests.vcxproj -> C:\ProgramData\NVIDIA Corporation\CUDA Samples\v9.0\3_Imaging\MovieHasher\x64\Release\CodeTests.pdb (Full PDB)

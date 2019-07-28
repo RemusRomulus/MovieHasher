@@ -10,10 +10,11 @@ Author and Rights Owner: Andrew Britton
 - Create Hash that contains current and next hash information
 - Add polymorphic hash function
 - Add 3D hash fingerprint
-- Add hashing lookup that deals with two frames
+- Load area of texture (as randomizer) and aggregate over area for final pixel hash value
 
 
 ## Notes
 Code derived on top of NVIDIA Sample: imageDenoising
 Minimum spec: SM 2.0
+
 
