@@ -68,8 +68,7 @@ const char *sReference[] =
 std::string test_image = "MovieSequence.000118.bmp";
 std::string out_image = "MovieSequence_Test.ppm";
 Sequencer sequencer(test_image);
-//TODO: Write sequence reader
-//TODO:
+
 
 //OpenGL PBO and texture "names"
 GLuint gl_PBO, gl_Tex;
