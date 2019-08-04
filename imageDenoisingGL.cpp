@@ -65,7 +65,7 @@ const char *sReference[] =
 ////////////////////////////////////////////////////////////////////////////////
 // Global data handlers and parameters
 ////////////////////////////////////////////////////////////////////////////////
-std::string test_image = "MovieSequence.000001.bmp";
+std::string test_image = "MovieSequence.000100.bmp";
 std::string next_image = "";
 std::string out_image = "MovieSequence_Test.ppm";
 Sequencer sequencer(test_image);
@@ -564,7 +564,7 @@ int main(int argc, char **argv)
         getCmdLineArgumentString(argc, (const char **)argv,
                                  "file", (char **) &dump_file);
 
-        int kernel = 5;
+        int kernel = 6;
 
         if (checkCmdLineFlag(argc, (const char **)argv, "kernel"))
         {
@@ -625,7 +625,7 @@ int main(int argc, char **argv)
         initGL(&argc, argv);
         cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 
-        checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
+        checkCudaErrors(CUDA_MallocArray(&h_Src, &h_next_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
         initOpenGLBuffers();
     }

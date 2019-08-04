@@ -124,7 +124,7 @@ cudaError_t CUDA_UnbindTexture()
 	if (out != 0)
 		return out;
 
-	out = cudaUnbindTexture(tex_next_image);
+	out = cudaUnbindTexture(tex_next_Image);
 	if(out!=0)
 		return out;
 

@@ -50,6 +50,24 @@ public:
 	void operator=(Sequencer const&) = delete;
 
 
+	bool get_next_frame(std::string &next_frame, std::string &name_out)
+	{
+		if (m_current_frame + 1 <= m_last_frame)
+		{
+			std::string frame_number = add_padding(m_current_frame);
+			next_frame = m_prefix + m_file_delim + frame_number + m_file_delim + m_ext;
+			name_out = m_prefix + m_out_prefix + m_file_delim + frame_number + m_file_delim + "ppm";
+			m_current_frame++;
+			return true;
+		}
+		else
+		{
+			name_out.clear();
+			next_frame.clear();
+			return false;
+		}
+	}
+
 	bool get_next_frame(std::string &next_frame, std::string &plus_one_frame, std::string &name_out)
 	{
 		if (m_current_frame+1 <= m_last_frame)
