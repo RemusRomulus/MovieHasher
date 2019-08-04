@@ -65,7 +65,8 @@ const char *sReference[] =
 ////////////////////////////////////////////////////////////////////////////////
 // Global data handlers and parameters
 ////////////////////////////////////////////////////////////////////////////////
-std::string test_image = "MovieSequence.000118.bmp";
+std::string test_image = "MovieSequence.000100.bmp";
+std::string next_image = "";
 std::string out_image = "MovieSequence_Test.ppm";
 Sequencer sequencer(test_image);
 
@@ -75,6 +76,7 @@ GLuint gl_PBO, gl_Tex;
 struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
 //Source image on the host side
 uchar4 *h_Src;
+uchar4 *h_next_Src;
 int imageW, imageH;
 GLuint shader;
 
@@ -185,6 +187,11 @@ void runImageFilters(TColor *d_dst)
 		case 5:
 			cuda_HASH(d_dst, imageW, imageH);
             break;
+
+		case 6:
+			//TODO: write cuda_TimeHASH()
+			cuda_TimeHASH(d_dst, imageW, imageH);
+			break;
     }
 
     getLastCudaError("Filtering kernel execution failed.\n");
@@ -474,14 +481,22 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, 
     // First load the image, so we know what the size of the image (imageW and imageH)
     printf("Allocating host and CUDA memory and loading image file...\n");
     const char *image_path = sdkFindFilePath(test_image.c_str(), argv[0]);
+	const char *next_image_path = sdkFindFilePath(next_image.c_str(), argv[0]);
 
     if (image_path == NULL)
     {
-        printf("imageDenoisingGL was unable to find and load image file <portrait_noise.bmp>.\nExiting...\n");
+        printf("imageDenoisingGL was unable to find and load image file <%s>.\nExiting...\n", test_image.c_str());
         exit(EXIT_FAILURE);
     }
 
+	if (next_image_path == NULL)
+	{
+		printf("imageDenoisingGL was unable to find and load image file <%s>.\nExiting...\n", next_image.c_str());
+		exit(EXIT_FAILURE);
+	}
+
     LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
+	LoadBMPFile(&h_next_Src, &imageW, &imageH, next_image_path);
     printf("Data init done.\n");
 
 	// Second, load the hash, because we need that and so we can get the dimensions
@@ -498,7 +513,7 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, 
 	printf("Hash init done.\n");
 
 
-    checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
+    checkCudaErrors(CUDA_MallocArray(&h_Src, &h_next_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
     TColor *d_dst = NULL;
     unsigned char *h_dst = NULL;
@@ -549,7 +564,7 @@ int main(int argc, char **argv)
         getCmdLineArgumentString(argc, (const char **)argv,
                                  "file", (char **) &dump_file);
 
-        int kernel = 5;
+        int kernel = 6;
 
         if (checkCmdLineFlag(argc, (const char **)argv, "kernel"))
         {
@@ -559,7 +574,7 @@ int main(int argc, char **argv)
 		bool tmp = true;
 		do
 		{
-			tmp = sequencer.get_next_frame(test_image, out_image);
+			tmp = sequencer.get_next_frame(test_image, next_image, out_image);
 			if (tmp)
 				runAutoTest(argc, argv, dump_file, kernel, true);
 		} while (tmp);
@@ -610,7 +625,7 @@ int main(int argc, char **argv)
         initGL(&argc, argv);
         cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 
-        checkCudaErrors(CUDA_MallocArray(&h_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
+        checkCudaErrors(CUDA_MallocArray(&h_Src, &h_next_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
 
         initOpenGLBuffers();
     }

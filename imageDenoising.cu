@@ -83,11 +83,15 @@ __device__ void uv_wrap(const int currX, const int currY, int &x, int &y, const 
 texture<uchar4, 2, cudaReadModeNormalizedFloat> texImage;
 cudaChannelFormatDesc uchar4tex = cudaCreateChannelDesc<uchar4>();
 
+texture<uchar4, 2, cudaReadModeNormalizedFloat> tex_next_Image;
+cudaChannelFormatDesc uchar4_next_tex = cudaCreateChannelDesc<uchar4>();
+
 texture<uchar4, 2, cudaReadModeNormalizedFloat> hashImage;
 cudaChannelFormatDesc uchar4hash = cudaCreateChannelDesc<uchar4>();
 
 //CUDA array descriptor
 cudaArray *a_Src;
+cudaArray *next_Src;
 cudaArray *hash_Src;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +108,12 @@ cudaError_t CUDA_Bind2TextureArray()
 {
 	cudaError_t out = cudaBindTextureToArray(texImage, a_Src);
     if(out !=0)
-	{
 		return out;
-	}
+
+	out = cudaBindTextureToArray(tex_next_Image, next_Src);
+	if (out !=0)
+		return out;
+
 	return cudaBindTextureToArray(hashImage, hash_Src);
 }
 
@@ -116,26 +123,40 @@ cudaError_t CUDA_UnbindTexture()
 	cudaError_t out = cudaUnbindTexture(texImage);
 	if (out != 0)
 		return out;
+
+	out = cudaUnbindTexture(tex_next_Image);
+	if(out!=0)
+		return out;
+
 	return cudaUnbindTexture(hashImage);
 }
 
 extern "C"
-cudaError_t CUDA_MallocArray(uchar4 **h_Src, uchar4 **hashHost_Src, int imageW, int imageH,
+cudaError_t CUDA_MallocArray(uchar4 **h_Src, uchar4 **h_next_Src, uchar4 **hashHost_Src, int imageW, int imageH,
 	int hashW, int hashH)
 {
     cudaError_t error;
 
+	// Init current frame
     error = cudaMallocArray(&a_Src, &uchar4tex, imageW, imageH);
     error = cudaMemcpyToArray(a_Src, 0, 0,
                               *h_Src, imageW * imageH * sizeof(uchar4),
                               cudaMemcpyHostToDevice
                              );
 
+	// init next frame
+	error = cudaMallocArray(&next_Src, &uchar4_next_tex, imageW, imageH);
+    error = cudaMemcpyToArray(next_Src, 0, 0,
+                              *h_next_Src, imageW * imageH * sizeof(uchar4),
+                              cudaMemcpyHostToDevice
+                             );
+
+	// init hash tex
 	error = cudaMallocArray(&hash_Src, &uchar4hash, hashW, hashH);
 	error = cudaMemcpyToArray(hash_Src, 0, 0,
-		*hashHost_Src, hashW * hashH * sizeof(uchar4),
-		cudaMemcpyHostToDevice
-	);
+							*hashHost_Src, hashW * hashH * sizeof(uchar4),
+							cudaMemcpyHostToDevice
+							);
 
     return error;
 }
@@ -147,6 +168,11 @@ cudaError_t CUDA_FreeArray()
 	cudaError_t out = cudaFreeArray(a_Src);
 	if (out != 0)
 		return out;
+	
+	out = cudaFreeArray(next_Src);
+	if (out != 0)
+		return out;
+	
 	return cudaFreeArray(hash_Src);
 }
 

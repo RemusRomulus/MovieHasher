@@ -6,6 +6,7 @@
 *.fatbin
 *.bmp
 *.ppm
+*.log
 !hash.bmp
 *.jpg
 *.psd
