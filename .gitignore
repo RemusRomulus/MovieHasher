@@ -16,3 +16,5 @@
 /x64
 *.pdb
 *.vcxproj.user
+
+CodeTests/CodeTests/x64/Release/
