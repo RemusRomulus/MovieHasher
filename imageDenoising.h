@@ -45,9 +45,13 @@ extern "C" void LoadBMPFile(uchar4 **dst, int *width, int *height, const char *n
 
 // CUDA wrapper functions for allocation/freeing texture arrays
 extern "C" cudaError_t CUDA_Bind2TextureArray();
+extern "C" cudaError_t CUDA_Bind2_RunLengthSignatureArray();
 extern "C" cudaError_t CUDA_UnbindTexture();
+extern "C" cudaError_t CUDA_UnbindRunLengthSignatureTexture();
 extern "C" cudaError_t CUDA_MallocArray(uchar4 **h_Src, uchar4 **, uchar4 **hashHost_Src, int imageW, int imageH, int hashW, int hashH);
+extern "C" cudaError_t CUDA_Malloc_RunLengthSignature(uchar4 ** cuda_signature_Src, int imageW, int imageH);
 extern "C" cudaError_t CUDA_FreeArray();
+extern "C" cudaError_t CUDA_Free_RunLengthSignature();
 
 // CUDA kernel functions
 extern "C" void cuda_Copy(TColor *d_dst, int imageW, int imageH);
@@ -59,7 +63,8 @@ extern "C" void cuda_NLMdiag(TColor *d_dst, int imageW, int imageH, float Noise,
 extern "C" void cuda_NLM2(TColor *d_dst, int imageW, int imageH, float Noise, float LerpC);
 extern "C" void cuda_NLM2diag(TColor *d_dst, int imageW, int imageH, float Noise, float LerpC);
 
-extern "C" void cuda_HASH(TColor *d_dst, int imageW, int imageH);
-extern "C" void cuda_TimeHASH(TColor *d_dst, int imageW, int imageH);
-
+// HASH GENERATION FUNCS
+extern "C" void cuda_HASH(TColor *d_dst, int imageW, int imageH);				  //Single Frame Hash Generation
+extern "C" void cuda_TimeHASH(TColor *d_dst, int imageW, int imageH);			  //Multiple Frame Hash Generation
+extern "C" void cuda_TimeAndRunLengthHASH(TColor *d_dst, TColor *d_runlength, int imageW, int imageH); //Multiple Frame Hash Generation with Run Length Signature
 #endif

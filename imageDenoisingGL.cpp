@@ -77,6 +77,7 @@ struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
 //Source image on the host side
 uchar4 *h_Src;
 uchar4 *h_next_Src;
+uchar4 *h_runtime_Src;
 int imageW, imageH;
 GLuint shader;
 
@@ -141,7 +142,7 @@ void computeFPS()
     }
 }
 
-void runImageFilters(TColor *d_dst)
+void runImageFilters(TColor *d_dst, TColor *d_runlength=nullptr)
 {
     switch (g_Kernel)
     {
@@ -191,6 +192,10 @@ void runImageFilters(TColor *d_dst)
 		case 6:
 			//TODO: write cuda_TimeHASH()
 			cuda_TimeHASH(d_dst, imageW, imageH);
+			break;
+
+		case 7:
+			cuda_TimeAndRunLengthHASH(d_dst, d_runlength, imageW, imageH);
 			break;
     }
 
@@ -574,7 +579,9 @@ int main(int argc, char **argv)
 
 		// Create Memory for Running Signature
 		// CUDA Malloc Array
+		checkCudaErrors(CUDA_Malloc_RunLengthSignature(&h_runtime_Src, imageW, imageH));
 		// CUDA Bind to Texture Array
+		checkCudaErrors(CUDA_Bind2_RunLengthSignatureArray());
 		//
 		bool tmp = true;
 		do

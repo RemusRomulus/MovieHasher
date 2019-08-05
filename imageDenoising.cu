@@ -86,13 +86,17 @@ cudaChannelFormatDesc uchar4tex = cudaCreateChannelDesc<uchar4>();
 texture<uchar4, 2, cudaReadModeNormalizedFloat> tex_next_Image;
 cudaChannelFormatDesc uchar4_next_tex = cudaCreateChannelDesc<uchar4>();
 
+texture<uchar4, 2, cudaReadModeNormalizedFloat> tex_runlength_Image;
+cudaChannelFormatDesc uchar4_runlength_signature_text = cudaCreateChannelDesc<uchar4>();
+
 texture<uchar4, 2, cudaReadModeNormalizedFloat> hashImage;
 cudaChannelFormatDesc uchar4hash = cudaCreateChannelDesc<uchar4>();
 
 //CUDA array descriptor
-cudaArray *a_Src;
-cudaArray *next_Src;
-cudaArray *hash_Src;
+cudaArray *a_Src;   //. . . . . . .	h_Src;
+cudaArray *next_Src;			//	h_next_Src;
+cudaArray *cuda_signature_Src;  //  h_runtime_Src;
+cudaArray *hash_Src; //. . . . . .  hashHost_Src;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Filtering kernels
@@ -117,6 +121,11 @@ cudaError_t CUDA_Bind2TextureArray()
 	return cudaBindTextureToArray(hashImage, hash_Src);
 }
 
+extern "C" cudaError_t CUDA_Bind2_RunLengthSignatureArray()
+{
+	return cudaBindTextureToArray(tex_runlength_Image, cuda_signature_Src);
+}
+
 extern "C"
 cudaError_t CUDA_UnbindTexture()
 {
@@ -129,6 +138,24 @@ cudaError_t CUDA_UnbindTexture()
 		return out;
 
 	return cudaUnbindTexture(hashImage);
+}
+
+extern "C" cudaError_t CUDA_UnbindRunLengthSignatureTexture()
+{
+	return cudaUnbindTexture(cuda_signature_Src);
+}
+
+extern "C" cudaError_t CUDA_Malloc_RunLengthSignature(uchar4 ** cuda_signature_Src, int imageW, int imageH)
+{
+	cudaError_t error;
+
+	error = cudadMallocArray(&cuda_signature_Src, &uchar4_runlength_signature_text, imageW, imageH);
+	error = cudaMemcpyToArray(cuda_signature_Src, 0, 0,
+								*h_runtime_Src, imageW * imageH * sizeof(uchar4),
+								cudaMemcpyHostToDevice
+								);
+
+	return error;
 }
 
 extern "C"
@@ -174,5 +201,10 @@ cudaError_t CUDA_FreeArray()
 		return out;
 	
 	return cudaFreeArray(hash_Src);
+}
+
+extern "C" cudaError_t CUDA_Free_RunLengthSignature()
+{
+	return cudaFreeArray(cuda_signature_Src);
 }
 
