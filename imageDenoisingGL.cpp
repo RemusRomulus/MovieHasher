@@ -571,6 +571,11 @@ int main(int argc, char **argv)
             kernel = getCmdLineArgumentInt(argc, (const char **)argv, "kernel");
         }
 
+
+		// Create Memory for Running Signature
+		// CUDA Malloc Array
+		// CUDA Bind to Texture Array
+		//
 		bool tmp = true;
 		do
 		{
@@ -578,6 +583,10 @@ int main(int argc, char **argv)
 			if (tmp)
 				runAutoTest(argc, argv, dump_file, kernel, true);
 		} while (tmp);
+		// Probably DO LAST FRAME
+		// CUDA Memcopy from device to host
+		// CUDA Unbind Texture Array
+		// CUDA Free Texture
     }
     else
     {
