@@ -142,7 +142,7 @@ void computeFPS()
     }
 }
 
-void runImageFilters(TColor *d_dst, TColor *d_runlength=nullptr)
+void runImageFilters(TColor *d_dst, bool is_last_frame=false)
 {
     switch (g_Kernel)
     {
@@ -195,7 +195,7 @@ void runImageFilters(TColor *d_dst, TColor *d_runlength=nullptr)
 			break;
 
 		case 7:
-			cuda_TimeAndRunLengthHASH(d_dst, d_runlength, imageW, imageH);
+			cuda_TimeAndRunLengthHASH(d_dst, imageW, imageH);
 			break;
     }
 
@@ -475,76 +475,96 @@ void cleanup()
     sdkDeleteTimer(&timer);
 }
 
-void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, bool is_series=false)
+void runAutoTest(int argc, char **argv, const char *filename, 
+	int kernel_param, bool is_series=false, bool is_Last_frame=false)
 {
     printf("[%s] - (automated testing w/ readback)\n", sSDKsample);
 
     int devID = findCudaDevice(argc, (const char **)argv);
 
 	
-
-    // First load the image, so we know what the size of the image (imageW and imageH)
-    printf("Allocating host and CUDA memory and loading image file...\n");
-    const char *image_path = sdkFindFilePath(test_image.c_str(), argv[0]);
-	const char *next_image_path = sdkFindFilePath(next_image.c_str(), argv[0]);
-
-    if (image_path == NULL)
-    {
-        printf("imageDenoisingGL was unable to find and load image file <%s>.\nExiting...\n", test_image.c_str());
-        exit(EXIT_FAILURE);
-    }
-
-	if (next_image_path == NULL)
+	if (!is_Last_frame)
 	{
-		printf("imageDenoisingGL was unable to find and load image file <%s>.\nExiting...\n", next_image.c_str());
-		exit(EXIT_FAILURE);
+		// First load the image, so we know what the size of the image (imageW and imageH)
+		printf("Allocating host and CUDA memory and loading image file...\n");
+		const char *image_path = sdkFindFilePath(test_image.c_str(), argv[0]);
+		const char *next_image_path = sdkFindFilePath(next_image.c_str(), argv[0]);
+
+		if (image_path == NULL)
+		{
+			printf("imageDenoisingGL was unable to find and load image file <%s>.\nExiting...\n", test_image.c_str());
+			exit(EXIT_FAILURE);
+		}
+
+		if (next_image_path == NULL)
+		{
+			printf("imageDenoisingGL was unable to find and load image file <%s>.\nExiting...\n", next_image.c_str());
+			exit(EXIT_FAILURE);
+		}
+
+	
+		LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
+		LoadBMPFile(&h_next_Src, &imageW, &imageH, next_image_path);
+
+		printf("Data init done.\n");
+
+		// Second, load the hash, because we need that and so we can get the dimensions
+		printf("Allocating host and CUDA memory and loading hash file...\n");
+		const char *hash_path = sdkFindFilePath("hash.bmp", argv[0]);
+
+		if (hash_path == NULL)
+		{
+			printf("imageDenoisingGL was unable to find and load image file <hash.bmp>.\nExiting...\n");
+			exit(EXIT_FAILURE);
+		}
+
+		LoadBMPFile(&hashHost_Src, &hashW, &hashH, hash_path);
+		printf("Hash init done.\n");
+
+
+		checkCudaErrors(CUDA_MallocArray(&h_Src, &h_next_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
+
+		TColor *d_dst = NULL;
+		unsigned char *h_dst = NULL;
+		checkCudaErrors(cudaMalloc((void **)&d_dst, imageW*imageH * sizeof(TColor)));
+		h_dst = (unsigned char *)malloc(imageH*imageW * 4);
+
+		{
+			g_Kernel = kernel_param;
+			printf("[AutoTest]: %s <%s>\n", sSDKsample, filterMode[g_Kernel]);
+			checkCudaErrors(CUDA_Bind2TextureArray());
+			runImageFilters(d_dst);
+			checkCudaErrors(CUDA_UnbindTexture());
+			/*checkCudaErrors(cudaDeviceSynchronize());*/
+
+			checkCudaErrors(cudaMemcpy(h_dst, d_dst, imageW*imageH * sizeof(TColor), cudaMemcpyDeviceToHost));
+			sdkSavePPM4ub(std::string(out_image).c_str(), h_dst, imageW, imageH);
+		}
+
+		checkCudaErrors(CUDA_FreeArray());
+		free(h_Src);
+		free(hashHost_Src);
+
+		checkCudaErrors(cudaFree(d_dst));
+		free(h_dst);
+
+		printf("\n[%s] -> Kernel %d, Saved: %s\n", sSDKsample, kernel_param, filename);
 	}
-
-    LoadBMPFile(&h_Src, &imageW, &imageH, image_path);
-	LoadBMPFile(&h_next_Src, &imageW, &imageH, next_image_path);
-    printf("Data init done.\n");
-
-	// Second, load the hash, because we need that and so we can get the dimensions
-	printf("Allocating host and CUDA memory and loading hash file...\n");
-	const char *hash_path = sdkFindFilePath("hash.bmp", argv[0]);
-
-	if (hash_path == NULL)
+	else
 	{
-		printf("imageDenoisingGL was unable to find and load image file <hash.bmp>.\nExiting...\n");
-		exit(EXIT_FAILURE);
+		TColor *d_dst = NULL;
+		unsigned char *h_dst = NULL;
+		checkCudaErrors(cudaMalloc((void **)&d_dst, imageW*imageH * sizeof(TColor)));
+		h_dst = (unsigned char *)malloc(imageH*imageW * 4);
+
+		cuda_CopyDownRunLengthHASH(d_dst, imageW, imageH);
+		checkCudaErrors(cudaDeviceSynchronize());
+		checkCudaErrors(cudaMemcpy(h_dst, d_dst, imageW*imageH * sizeof(TColor), cudaMemcpyDeviceToHost));
+		sdkSavePPM4ub("Final_Frame_Hash.ppm", h_dst, imageW, imageH);
+		checkCudaErrors(cudaFree(d_dst));
+		free(h_dst);
+
 	}
-
-	LoadBMPFile(&hashHost_Src, &hashW, &hashH, hash_path);
-	printf("Hash init done.\n");
-
-
-    checkCudaErrors(CUDA_MallocArray(&h_Src, &h_next_Src, &hashHost_Src, imageW, imageH, hashW, hashH));
-
-    TColor *d_dst = NULL;
-    unsigned char *h_dst = NULL;
-    checkCudaErrors(cudaMalloc((void **)&d_dst, imageW*imageH*sizeof(TColor)));
-    h_dst = (unsigned char *)malloc(imageH*imageW*4);
-
-    {
-        g_Kernel = kernel_param;
-        printf("[AutoTest]: %s <%s>\n", sSDKsample, filterMode[g_Kernel]);
-        checkCudaErrors(CUDA_Bind2TextureArray());
-        runImageFilters(d_dst);
-        checkCudaErrors(CUDA_UnbindTexture());
-        checkCudaErrors(cudaDeviceSynchronize());
-
-        checkCudaErrors(cudaMemcpy(h_dst, d_dst, imageW*imageH*sizeof(TColor), cudaMemcpyDeviceToHost));
-        sdkSavePPM4ub(std::string(out_image).c_str(), h_dst, imageW, imageH);
-    }
-
-    checkCudaErrors(CUDA_FreeArray());
-    free(h_Src);
-	free(hashHost_Src);
-
-    checkCudaErrors(cudaFree(d_dst));
-    free(h_dst);
-
-    printf("\n[%s] -> Kernel %d, Saved: %s\n", sSDKsample, kernel_param, filename);
 
 	if (!is_series)
 		exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -569,19 +589,22 @@ int main(int argc, char **argv)
         getCmdLineArgumentString(argc, (const char **)argv,
                                  "file", (char **) &dump_file);
 
-        int kernel = 6;
+        int kernel = 7;
 
         if (checkCmdLineFlag(argc, (const char **)argv, "kernel"))
         {
             kernel = getCmdLineArgumentInt(argc, (const char **)argv, "kernel");
         }
 
+		/////////////////////////////////////////////////////
+		// RENDER LOOP
 
 		// Create Memory for Running Signature
 		// CUDA Malloc Array
-		checkCudaErrors(CUDA_Malloc_RunLengthSignature(&h_runtime_Src, imageW, imageH));
+		//checkCudaErrors(CUDA_Malloc_RunLengthSignature(&h_runtime_Src, imageW, imageH));
+		alloc_run_length(imageW, imageH);
 		// CUDA Bind to Texture Array
-		checkCudaErrors(CUDA_Bind2_RunLengthSignatureArray());
+		//checkCudaErrors(CUDA_Bind2_RunLengthSignatureArray());
 		//
 		bool tmp = true;
 		do
@@ -589,11 +612,19 @@ int main(int argc, char **argv)
 			tmp = sequencer.get_next_frame(test_image, next_image, out_image);
 			if (tmp)
 				runAutoTest(argc, argv, dump_file, kernel, true);
+			else
+				runAutoTest(argc, argv, dump_file, kernel, true, !tmp);
 		} while (tmp);
 		// Probably DO LAST FRAME
+		unsigned char *host_copy = NULL;
+		
+		sdkSavePPM4ub(std::string("Final_Frame_Composite.ppm").c_str(), host_copy, imageW, imageH);
+		free(host_copy);
+
 		// CUDA Memcopy from device to host
 		// CUDA Unbind Texture Array
 		// CUDA Free Texture
+		free_run_length();
     }
     else
     {

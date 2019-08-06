@@ -68,6 +68,30 @@ __device__ TColor make_color(float r, float g, float b, float a)
         ((int)(r * 255.0f) <<  0);
 }
 
+__device__ TColor make_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a)
+{
+	return(a << 24 | b << 16 | g << 8 | r);
+}
+
+__device__ TColor tcolor_plus_tcolor(const TColor &a, const TColor &b)
+{
+	unsigned int amask = 0xff000000;
+	unsigned int bmask = 0x00ff0000;
+	unsigned int gmask = 0x0000ff00;
+	unsigned int rmask = 0x000000ff;
+	unsigned int aa = (int)(amask & a) >> 24;
+	unsigned int ab = (int)(bmask & a) >> 16;
+	unsigned int ag = (int)(gmask & a) >> 8;
+	unsigned int ar = (int)(rmask & a) >> 0;
+
+	unsigned int ba = (int)(amask & b) >> 24;
+	unsigned int bb = (int)(bmask & b) >> 16;
+	unsigned int bg = (int)(gmask & b) >> 8;
+	unsigned int br = (int)(rmask & b) >> 0;
+
+	return make_color(ar+br, ag+bg, ab+bb, aa+ba);
+}
+
 __device__ void uv_wrap(const int currX, const int currY, int &x, int &y, const int w, const int h)
 {
 	x = (currX >= w) ? currX - w : currX ;
@@ -98,6 +122,7 @@ cudaArray *next_Src;			//	h_next_Src;
 cudaArray *cuda_signature_Src;  //  h_runtime_Src;
 cudaArray *hash_Src; //. . . . . .  hashHost_Src;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Filtering kernels
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,10 +146,10 @@ cudaError_t CUDA_Bind2TextureArray()
 	return cudaBindTextureToArray(hashImage, hash_Src);
 }
 
-extern "C" cudaError_t CUDA_Bind2_RunLengthSignatureArray()
-{
-	return cudaBindTextureToArray(tex_runlength_Image, cuda_signature_Src);
-}
+//extern "C" cudaError_t CUDA_Bind2_RunLengthSignatureArray()
+//{
+//	return cudaBindTextureToArray(tex_runlength_Image, cuda_signature_Src);
+//}
 
 extern "C"
 cudaError_t CUDA_UnbindTexture()
@@ -140,23 +165,23 @@ cudaError_t CUDA_UnbindTexture()
 	return cudaUnbindTexture(hashImage);
 }
 
-extern "C" cudaError_t CUDA_UnbindRunLengthSignatureTexture()
-{
-	return cudaUnbindTexture(cuda_signature_Src);
-}
-
-extern "C" cudaError_t CUDA_Malloc_RunLengthSignature(uchar4 ** cuda_signature_Src, int imageW, int imageH)
-{
-	cudaError_t error;
-
-	error = cudadMallocArray(&cuda_signature_Src, &uchar4_runlength_signature_text, imageW, imageH);
-	error = cudaMemcpyToArray(cuda_signature_Src, 0, 0,
-								*h_runtime_Src, imageW * imageH * sizeof(uchar4),
-								cudaMemcpyHostToDevice
-								);
-
-	return error;
-}
+//extern "C" cudaError_t CUDA_UnbindRunLengthSignatureTexture()
+//{
+//	return cudaUnbindTexture(cuda_signature_Src);
+//}
+//
+//extern "C" cudaError_t CUDA_Malloc_RunLengthSignature(uchar4 ** cuda_signature_Src, int imageW, int imageH)
+//{
+//	cudaError_t error;
+//
+//	error = cudadMallocArray(&cuda_signature_Src, &uchar4_runlength_signature_text, imageW, imageH);
+//	error = cudaMemcpyToArray(cuda_signature_Src, 0, 0,
+//								*h_runtime_Src, imageW * imageH * sizeof(uchar4),
+//								cudaMemcpyHostToDevice
+//								);
+//
+//	return error;
+//}
 
 extern "C"
 cudaError_t CUDA_MallocArray(uchar4 **h_Src, uchar4 **h_next_Src, uchar4 **hashHost_Src, int imageW, int imageH,
@@ -203,8 +228,9 @@ cudaError_t CUDA_FreeArray()
 	return cudaFreeArray(hash_Src);
 }
 
-extern "C" cudaError_t CUDA_Free_RunLengthSignature()
-{
-	return cudaFreeArray(cuda_signature_Src);
-}
+//extern "C" cudaError_t CUDA_Free_RunLengthSignature()
+//{
+//	return cudaFreeArray(cuda_signature_Src);
+//}
+
 

@@ -12,7 +12,6 @@ Movie Integrity generator
 //TODO: Merge Prior and Current Hashes into alternating binary mesh
 
 
-
 /////////////////////////////////////////
 //////// KERNELS
 
@@ -99,8 +98,7 @@ __global__ void TimeHASH(
 
 
 __global__ void TimeAndRunLengthHASH(TColor *dst,
-									int imageW, int imageH,
-									bool is_last_frame
+									int imageW, int imageH
 									)
 {
 	const int ix = blockDim.x * blockIdx.x + threadIdx.x;
@@ -134,12 +132,55 @@ __global__ void TimeAndRunLengthHASH(TColor *dst,
 		mod = fIntResult.z & 16 - 1;
 		rem = fIntResult.z - (mod * 16);
 		hB = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
+
 		dst[imageW * iy + ix] = make_color(hR.x, hG.y, hB.z, 0);
+		run_length_signature[imageW * iy + ix] = tcolor_plus_tcolor(run_length_signature[imageW * iy + ix],
+			dst[imageW * iy + ix]);
+
+	}
+}
+
+__global__ void CopyDownRunLengthHASH(TColor *dst, int imageW, int imageH)
+{
+	const int ix = blockDim.x * blockIdx.x + threadIdx.x;
+	const int iy = blockDim.y * blockIdx.y + threadIdx.y;
+
+	if (ix < imageW && iy < imageH)
+	{
+		dst[imageW * iy + ix] = run_length_signature[imageW * iy + ix];
 	}
 }
 
 //////////////////////////////////////////
+// PERSISTENT DEVICE MEMORY MGT
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#allocation-persisting-kernel-launches
+//
+
+__global__ void alloc_run_length_mem(int imageW, int imageH)
+{
+	if ()
+	run_length_signature = (TColor*)malloc(sizeof(TColor) * imageW * imageH);
+	__syncthreads();
+}
+
+__global__ void free_run_length_mem()
+{
+	//TColor* ptr = run_length_signature[0];
+	free(run_length_signature);
+}
+
+//////////////////////////////////////////
 ////// KERNEL CALLS
+extern "C" void alloc_run_length(int imageW, int imageH)
+{
+	alloc_run_length_mem << <1, 1 >> > (imageW, imageH);
+}
+
+extern "C" void free_run_length()
+{
+	free_run_length_mem << <1, 1 >> > ();
+}
+
 extern "C" void
 cuda_HASH(TColor *d_dst, int imageW, int imageH)
 {
@@ -160,10 +201,18 @@ cuda_TimeHASH(TColor *d_dst, int imageW, int imageH)
 }
 
 extern "C" void
-cuda_TimeAndRunLengthHASH(TColor *d_dst, TColor *d_runlength, int imageW, int imageH)
+cuda_TimeAndRunLengthHASH(TColor *d_dst, int imageW, int imageH)
 {
 	dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
 	dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
 
-	TimeAndRunLengthHASH << <grid, threads >> >(d_dst, imageW, imageH, is_last_frame);
+	TimeAndRunLengthHASH << <grid, threads >> >(d_dst, imageW, imageH);
+}
+
+extern "C" void cuda_CopyDownRunLengthHASH(TColor *d_dst, int imageW, int imageH)
+{
+	dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
+	dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
+
+	CopyDownRunLengthHASH << <grid, threads >> >(d_dst, imageW, imageH);
 }
