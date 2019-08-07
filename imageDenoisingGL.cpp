@@ -574,7 +574,8 @@ int main(int argc, char **argv)
 
 		// Create Memory for Running Signature
 		// CUDA Malloc Array
-		// CUDA Bind to Texture Array
+		cuda_accum_buffer_alloc(imageW, imageH);
+		cuda_accum_buffer_init(imageW, imageH);
 		//
 		bool tmp = true;
 		do
@@ -587,6 +588,18 @@ int main(int argc, char **argv)
 		// CUDA Memcopy from device to host
 		// CUDA Unbind Texture Array
 		// CUDA Free Texture
+		TColor *d_dst = NULL;
+		unsigned char *h_dst = NULL;
+		checkCudaErrors(cudaMalloc((void **)&d_dst, imageW*imageH * sizeof(TColor)));
+		h_dst = (unsigned char *)malloc(imageH*imageW * 4);
+		cuda_accum_buffer_copy(d_dst, imageW, imageH);
+
+		checkCudaErrors(cudaMemcpy(h_dst, d_dst, imageW*imageH * sizeof(TColor), cudaMemcpyDeviceToHost));
+		sdkSavePPM4ub("RunLengthAccumBuffer.ppm", h_dst, imageW, imageH);
+
+		checkCudaErrors(cudaFree(d_dst));
+		free(h_dst);
+		cuda_accum_buffer_free();
     }
     else
     {

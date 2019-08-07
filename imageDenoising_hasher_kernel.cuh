@@ -9,7 +9,70 @@ Movie Integrity generator
 
 //TODO: Load a square texture area and aggregate over all points for final hash value
 //TODO: Randomize hasher image
-//TODO: Merge Prior and Current Hashes into alternating binary mesh
+
+
+/////////////////////////////////////////
+//////// PERSISTENT MEMORY
+__device__ TColor *accum_buffer;
+
+__global__ void accum_buffer_alloc(int imageW, int imageH)
+{
+	accum_buffer = (TColor*)malloc(sizeof(TColor) * imageW * imageH);
+}
+
+__global__ void accum_buffer_init(int imageW, int imageH)
+{
+	const int ix = blockDim.x * blockIdx.x + threadIdx.x;
+	const int iy = blockDim.y * blockIdx.y + threadIdx.y;
+
+	if (ix < imageW && iy < imageH)
+	{
+		accum_buffer[imageW * iy + ix] = 0;
+	}
+}
+
+__global__ void accum_buffer_free()
+{
+	free(accum_buffer);
+}
+
+__global__ void accum_buffer_copy(TColor *d_dst, int imageW, int imageH)
+{
+	const int ix = blockDim.x * blockIdx.x + threadIdx.x;
+	const int iy = blockDim.y * blockIdx.y + threadIdx.y;
+
+	if (ix < imageW && iy < imageH)
+	{
+		d_dst[imageW * iy + ix] = accum_buffer[imageW * iy + ix];
+	}
+}
+
+
+extern "C" void cuda_accum_buffer_alloc(int imageW, int imageH)
+{
+	accum_buffer_alloc<<<1,1>>>(imageW, imageH);
+}
+
+extern "C" void cuda_accum_buffer_init(int imageW, int imageH)
+{
+	dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
+	dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
+
+	accum_buffer_init <<<grid, threads>>>(imageW, imageH);
+}
+
+extern "C" void cuda_accum_buffer_free()
+{
+	accum_buffer_free<<<1,1>>>();
+}
+
+extern "C" void cuda_accum_buffer_copy(TColor *d_dst, int imageW, int imageH)
+{
+	dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
+	dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
+
+	accum_buffer_copy <<<grid, threads>>>(d_dst, imageW, imageH);
+}
 
 
 
@@ -94,6 +157,8 @@ __global__ void TimeHASH(
 		rem = fIntResult.z - (mod * 16);
 		hB = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
 		dst[imageW * iy + ix] = make_color(hR.x, hG.y, hB.z, 0);
+
+		//accum_buffer[imageW * iy + ix] = tcolor_plus_tcolor( accum_buffer[imageW * iy + ix], dst[imageW * iy + ix]);
 	}
 }
 
