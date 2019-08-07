@@ -74,7 +74,7 @@ __device__ void uv_wrap(const int currX, const int currY, int &x, int &y, const 
 	y = (currY >= w) ? currY - h : currY ;
 }
 
-__device__ TColor make_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a)
+__device__ TColor make_color_int(unsigned int r, unsigned int g, unsigned int b, unsigned int a)
 {
 	return(a << 24 | b << 16 | g << 8 | r);
 }
@@ -114,7 +114,7 @@ __device__ TColor tcolor_plus_tcolor(const TColor &a, const TColor &b)
 	unsigned int bg = (int)(gmask & b) >> 8;
 	unsigned int br = (int)(rmask & b) >> 0;
 
-	return make_color(ar + br, ag + bg, ab + bb, aa + ba);
+	return make_color_int(ar + br, ag + bg, ab + bb, aa + ba);
 }
 
 

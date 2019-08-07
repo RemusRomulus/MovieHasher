@@ -27,7 +27,7 @@ __global__ void accum_buffer_init(int imageW, int imageH)
 
 	if (ix < imageW && iy < imageH)
 	{
-		accum_buffer[imageW * iy + ix] = 0;
+		accum_buffer[imageW * iy + ix] = make_color_int(0, 0, 0, 0);
 	}
 }
 
@@ -158,7 +158,7 @@ __global__ void TimeHASH(
 		hB = tex2D(hashImage, float(mod + 0.5f), float(rem + 0.5f));
 		dst[imageW * iy + ix] = make_color(hR.x, hG.y, hB.z, 0);
 
-		//accum_buffer[imageW * iy + ix] = tcolor_plus_tcolor( accum_buffer[imageW * iy + ix], dst[imageW * iy + ix]);
+		accum_buffer[imageW * iy + ix] = tcolor_plus_tcolor( accum_buffer[imageW * iy + ix], dst[imageW * iy + ix]);
 	}
 }
 
