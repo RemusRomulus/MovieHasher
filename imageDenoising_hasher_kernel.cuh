@@ -43,7 +43,13 @@ __global__ void accum_buffer_copy(TColor *d_dst, int imageW, int imageH)
 
 	if (ix < imageW && iy < imageH)
 	{
-		d_dst[imageW * iy + ix] = accum_buffer[imageW * iy + ix];
+		unsigned int r, g, b, a;
+		tcolor_to_int(accum_buffer[imageW * iy + ix], r, g, b, a);
+		r = (r & 1) * 255;
+		g = (g & 1) * 255;
+		b = (b & 1) * 255;
+		a = (a & 1) * 255;
+		d_dst[imageW * iy + ix] = make_color_int(r, g, b, a);
 	}
 }
 

@@ -98,21 +98,24 @@ __device__ TColor make_color_int(unsigned int r, unsigned int g, unsigned int b,
 //	return make_color(ar + br, ag + bg, ab + bb, aa + ba);
 //}
 
-__device__ TColor tcolor_plus_tcolor(const TColor &a, const TColor &b)
+__device__ void tcolor_to_int(TColor color, unsigned int &r, unsigned int &g, unsigned int &b, unsigned int &a)
 {
 	unsigned int amask = 0xff000000;
 	unsigned int bmask = 0x00ff0000;
 	unsigned int gmask = 0x0000ff00;
 	unsigned int rmask = 0x000000ff;
-	unsigned int aa = (int)(amask & a) >> 24;
-	unsigned int ab = (int)(bmask & a) >> 16;
-	unsigned int ag = (int)(gmask & a) >> 8;
-	unsigned int ar = (int)(rmask & a) >> 0;
+	a = (int)(amask & color) >> 24;
+	b = (int)(bmask & color) >> 16;
+	g = (int)(gmask & color) >> 8;
+	r = (int)(rmask & color) >> 0;
+}
 
-	unsigned int ba = (int)(amask & b) >> 24;
-	unsigned int bb = (int)(bmask & b) >> 16;
-	unsigned int bg = (int)(gmask & b) >> 8;
-	unsigned int br = (int)(rmask & b) >> 0;
+__device__ TColor tcolor_plus_tcolor(const TColor &a, const TColor &b)
+{
+	unsigned int aa, ab, ag, ar, ba, bb, bg, br;
+
+	tcolor_to_int(a, ar, ag, ab, aa);
+	tcolor_to_int(b, br, bg, bb, ba);
 
 	return make_color_int(ar + br, ag + bg, ab + bb, aa + ba);
 }
