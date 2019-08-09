@@ -49,6 +49,11 @@ extern "C" cudaError_t CUDA_UnbindTexture();
 extern "C" cudaError_t CUDA_MallocArray(uchar4 **h_Src, uchar4 **, uchar4 **hashHost_Src, int imageW, int imageH, int hashW, int hashH);
 extern "C" cudaError_t CUDA_FreeArray();
 
+extern "C" void cuda_accum_buffer_alloc(int imageW, int imageH);
+extern "C" void cuda_accum_buffer_init(int imageW, int imageH);
+extern "C" void cuda_accum_buffer_copy(TColor *d_dst, int imageW, int imageH);
+extern "C" void cuda_accum_buffer_free();
+
 // CUDA kernel functions
 extern "C" void cuda_Copy(TColor *d_dst, int imageW, int imageH);
 extern "C" void cuda_KNN(TColor *d_dst, int imageW, int imageH, float Noise, float lerpC);

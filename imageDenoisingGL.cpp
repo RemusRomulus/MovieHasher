@@ -571,6 +571,19 @@ int main(int argc, char **argv)
             kernel = getCmdLineArgumentInt(argc, (const char **)argv, "kernel");
         }
 
+
+		// Create Memory for Running Signature
+		// CUDA Malloc Array
+		int imageW = 1280;
+		int imageH = 720;
+		int devID = findCudaDevice(argc, (const char **)argv);
+		if (true)
+		{
+			cuda_accum_buffer_alloc(imageW, imageH);
+			cuda_accum_buffer_init(imageW, imageH);
+		}
+		checkCudaErrors(cudaDeviceSynchronize());
+		//
 		bool tmp = true;
 		do
 		{
@@ -578,6 +591,26 @@ int main(int argc, char **argv)
 			if (tmp)
 				runAutoTest(argc, argv, dump_file, kernel, true);
 		} while (tmp);
+		// Probably DO LAST FRAME
+		// CUDA Memcopy from device to host
+		// CUDA Unbind Texture Array
+		// CUDA Free Texture
+
+		if (true)
+		{
+			TColor *outer_d_dst = NULL;
+			unsigned char *outer_h_dst = NULL;
+			checkCudaErrors(cudaMalloc((void **)&outer_d_dst, imageW*imageH * sizeof(TColor)));
+			outer_h_dst = (unsigned char *)malloc(imageH*imageW * 4);
+			cuda_accum_buffer_copy(outer_d_dst, imageW, imageH);
+
+			checkCudaErrors(cudaMemcpy(outer_h_dst, outer_d_dst, imageW*imageH * sizeof(TColor), cudaMemcpyDeviceToHost));
+			sdkSavePPM4ub("RunLengthAccumBuffer.ppm", outer_h_dst, imageW, imageH);
+
+			checkCudaErrors(cudaFree(outer_d_dst));
+			free(outer_h_dst);
+			cuda_accum_buffer_free();
+		}
     }
     else
     {
