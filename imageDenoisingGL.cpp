@@ -32,6 +32,9 @@ Movie Integrity generator
 #include <helper_functions.h> // includes for helper utility functions
 #include <helper_cuda.h>      // includes for cuda error checking and initialization
 
+// Project Includes
+#include "hash_generator.h"
+
 const char *sSDKsample = "CUDA ImageDenoising";
 
 const char *filterMode[] =
@@ -574,6 +577,9 @@ int main(int argc, char **argv)
 
 		// Create Memory for Running Signature
 		// CUDA Malloc Array
+		std::string unique_key = "Saturday 2019-08 August-31__08:46:32.38948-pm Pacific Daylight time-phoneid:xxxxxxxxxxx-xxxxxxxx";
+		hash_generator::make_hash_from_key(unique_key);
+
 		int imageW = 1280;
 		int imageH = 720;
 		int devID = findCudaDevice(argc, (const char **)argv);
