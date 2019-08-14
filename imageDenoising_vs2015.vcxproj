@@ -129,6 +129,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bmploader.cpp" />
+    <ClInclude Include="hash_generator.h" />
     <ClInclude Include="imageDenoising_hasher_kernel.cuh" />
     <ClInclude Include="Sequencer.h" />
     <CudaCompile Include="imageDenoising.cu" />

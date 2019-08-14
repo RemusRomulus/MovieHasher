@@ -13,6 +13,7 @@
 #define IMAGE_DENOISING_H
 
 typedef unsigned int TColor;
+typedef unsigned long long THash;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Filter configuration
@@ -66,5 +67,6 @@ extern "C" void cuda_NLM2diag(TColor *d_dst, int imageW, int imageH, float Noise
 
 extern "C" void cuda_HASH(TColor *d_dst, int imageW, int imageH);
 extern "C" void cuda_TimeHASH(TColor *d_dst, int imageW, int imageH);
+extern "C" void cuda_TimeHASH_UINT(TColor *d_dst, THash *hash, int imageW, int imageH);
 
 #endif
