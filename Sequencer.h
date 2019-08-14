@@ -38,7 +38,7 @@ public:
 		first_frame = std::stoi(frame);
 		m_digit_padding = frame.length();
 		m_current_frame = first_frame;
-		m_out_prefix = "_signature";
+		m_out_prefix = "_THash_signature";
 		m_file_delim = ".";
 
 		get_last_frame();

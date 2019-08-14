@@ -144,7 +144,7 @@ void computeFPS()
     }
 }
 
-void runImageFilters(TColor *d_dst)
+void runImageFilters(TColor *d_dst, THash *d_hash=nullptr)
 {
     switch (g_Kernel)
     {
@@ -194,6 +194,10 @@ void runImageFilters(TColor *d_dst)
 		case 6:
 			//TODO: write cuda_TimeHASH()
 			cuda_TimeHASH(d_dst, imageW, imageH);
+			break;
+
+		case 7:
+			cuda_TimeHASH_UINT(d_dst, d_hash, imageW, imageH);
 			break;
     }
 
@@ -473,7 +477,8 @@ void cleanup()
     sdkDeleteTimer(&timer);
 }
 
-void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, bool is_series=false)
+void runAutoTest(int argc, char **argv, const char *filename, 
+	int kernel_param, bool is_series=false, THash *h_hash=nullptr)
 {
     printf("[%s] - (automated testing w/ readback)\n", sSDKsample);
 
@@ -523,11 +528,15 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, 
     checkCudaErrors(cudaMalloc((void **)&d_dst, imageW*imageH*sizeof(TColor)));
     h_dst = (unsigned char *)malloc(imageH*imageW*4);
 
+	THash *d_hash = NULL;
+	checkCudaErrors(cudaMalloc((void **)&d_hash, 12 * sizeof(THash)));
+	checkCudaErrors(cudaMemcpy(d_hash, h_hash, 12 * sizeof(THash), cudaMemcpyHostToDevice));
+
     {
         g_Kernel = kernel_param;
         printf("[AutoTest]: %s <%s>\n", sSDKsample, filterMode[g_Kernel]);
         checkCudaErrors(CUDA_Bind2TextureArray());
-        runImageFilters(d_dst);
+        runImageFilters(d_dst, d_hash);
         checkCudaErrors(CUDA_UnbindTexture());
         checkCudaErrors(cudaDeviceSynchronize());
 
@@ -541,6 +550,7 @@ void runAutoTest(int argc, char **argv, const char *filename, int kernel_param, 
 
     checkCudaErrors(cudaFree(d_dst));
     free(h_dst);
+	checkCudaErrors(cudaFree(d_hash));
 
     printf("\n[%s] -> Kernel %d, Saved: %s\n", sSDKsample, kernel_param, filename);
 
@@ -567,7 +577,7 @@ int main(int argc, char **argv)
         getCmdLineArgumentString(argc, (const char **)argv,
                                  "file", (char **) &dump_file);
 
-        int kernel = 6;
+        int kernel = 7;
 
         if (checkCmdLineFlag(argc, (const char **)argv, "kernel"))
         {
@@ -577,8 +587,10 @@ int main(int argc, char **argv)
 
 		// Create Memory for Running Signature
 		// CUDA Malloc Array
-		std::string unique_key = "Saturday 2019-08 August-31__08:46:32.38948-pm Pacific Daylight time-phoneid:xxxxxxxxxxx-xxxxxxxx";
-		hash_generator::make_hash_from_key(unique_key);
+		/*std::string unique_key = "Saturday 2019-08 August-31__08:46:32.38948-pm Pacific Daylight time-phoneid:xxxxxxxxxxx-xxxxxxxx";*/
+		std::string unique_key = "Saturday 2117-12 Decemb-25__21:13:56.48204-am Eastern Standard Time -phone:id:309uIUHkj??iusdHbx";
+		THash *hash = (THash*)malloc(sizeof(THash) * 12);
+		hash_generator::make_hash_from_key(unique_key, hash);
 
 		int imageW = 1280;
 		int imageH = 720;
@@ -595,7 +607,7 @@ int main(int argc, char **argv)
 		{
 			tmp = sequencer.get_next_frame(test_image, next_image, out_image);
 			if (tmp)
-				runAutoTest(argc, argv, dump_file, kernel, true);
+				runAutoTest(argc, argv, dump_file, kernel, true, hash);
 		} while (tmp);
 		// Probably DO LAST FRAME
 		// CUDA Memcopy from device to host
@@ -616,6 +628,8 @@ int main(int argc, char **argv)
 			checkCudaErrors(cudaFree(outer_d_dst));
 			free(outer_h_dst);
 			cuda_accum_buffer_free();
+
+			free(hash);
 		}
     }
     else
