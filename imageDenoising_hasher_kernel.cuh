@@ -202,7 +202,19 @@ __global__ void TimeHASH_UINT(
 		fIntResult.z = __float2int_rz(fresult.z * 255.0f);
 
 		float hr, hg, hb;
-		unsigned short orientation = (ix&1 && iy&1)? 0 : (!ix&1 && iy&1)? 1 : (!ix&1 && !iy&1)? 2 : 3 ;
+		//unsigned short orientation = (ix&1 && iy&1)? 0 : (!ix&1 && iy&1)? 1 : (!ix&1 && !iy&1)? 2 : 3 ;
+		unsigned short orientation = 0;
+		int _ixi, _iyi;
+		_ixi = __float2int_rz(ix);
+		_iyi = __float2int_rz(iy);
+		if ((_ixi & 1) == 1 && (_iyi & 1) == 1)
+			orientation = 0;
+		else if ((_ixi & 1) == 1 && (_iyi & 1) == 0)
+			orientation = 1;
+		else if ((_ixi & 1) == 0 && (_iyi & 1) == 0)
+			orientation = 2;
+		else
+			orientation = 3;
 		THashAffineLookup(fIntResult, hash, orientation, hr, hg, hb);
 
 
