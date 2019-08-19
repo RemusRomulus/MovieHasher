@@ -101,6 +101,80 @@ __device__ TColor tcolor_plus_tcolor(const TColor &a, const TColor &b)
 	return make_color_int(ar + br, ag + bg, ab + bb, aa + ba);
 }
 
+__device__ void THashAffineLookup(int4 input, THash *lookup, unsigned short orientation, float &r, float &g, float &b)
+{
+	if (orientation == 0 || orientation > 3)
+	{
+		THash mask = THash(0x0000000000000001);
+		int channel_size = 4 * sizeof(THash);
+		int channel_mult = 0;
+		int iter = input.x & 3;
+		int sub_iter = input.x - (iter * 64);
+		THash mask_r = mask << sub_iter;
+		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+
+		channel_mult = 1;
+		iter = input.y & 3;
+		sub_iter = input.y - (iter * 64);
+		mask_r = mask << sub_iter;
+		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+
+		channel_mult = 2;
+		iter = intput.z & 3;
+		sub_iter = input.z - (iter * 64);
+		mask_r = mask << sub_iter;
+		b = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+	}
+	else if (orientation == 1)
+	{
+		THash mask = THash(0x0000000000000001);
+		int channel_size = 4 * sizeof(THash);
+		int channel_mult = 0;
+		int iter = input.x & 3;
+		int sub_iter = input.x - (iter * 64);
+		THash mask_r = mask << sub_iter;
+		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+
+		channel_mult = 1;
+		iter = input.y & 3;
+		sub_iter = input.y - (iter * 64);
+		mask_r = mask << sub_iter;
+		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+
+		channel_mult = 2;
+		iter = intput.z & 3;
+		sub_iter = input.z - (iter * 64);
+		mask_r = mask << sub_iter;
+		b = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+	}
+	else if (orientation == 2)
+	{
+		THash mask = THash(0x8000000000000000);
+		int channel_size = 4 * sizeof(THash);
+		int channel_mult = 0;
+		int iter = 3 - (input.x & 3);
+		int sub_iter = 64 - (input.x - (iter * 64));
+		THash mask_r = mask >> sub_iter;
+		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+
+		channel_mult = 1;
+		iter = 3 - (input.y & 3);
+		sub_iter = 64 - (input.y - (iter * 64));
+		mask_r = mask >> sub_iter;
+		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+
+		channel_mult = 2;
+		iter = 3 - (intput.z & 3);
+		sub_iter = 64 - (input.z - (iter * 64);)
+		mask_r = mask >> sub_iter;
+		b = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
+	}
+	else
+	{
+
+	}
+}
+
 
 
 
