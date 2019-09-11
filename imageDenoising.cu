@@ -106,19 +106,21 @@ __device__ void THashAffineLookup(int4 input, THash *lookup, unsigned short orie
 	if (orientation == 0 || orientation > 3)
 	{
 		THash mask = THash(0x0000000000000001);
-		int channel_size = 4 * sizeof(THash);
+		int channel_size = 4;
 		int channel_mult = 0;
 		int iter = input.x & 3;
 		THash sub_iter = input.x - (iter * 64);
 		THash mask_r = mask << sub_iter;
 		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x0000000000000001);
 		channel_mult = 1;
 		iter = input.y & 3;
 		sub_iter = input.y - (iter * 64);
 		mask_r = mask << sub_iter;
 		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x0000000000000001);
 		channel_mult = 2;
 		iter = input.z & 3;
 		sub_iter = input.z - (iter * 64);
@@ -135,19 +137,21 @@ __device__ void THashAffineLookup(int4 input, THash *lookup, unsigned short orie
 		_in.y = (16 * (input.y & 15)) + (input.y & 15);
 		_in.z = (16 * (input.z & 15)) + (input.z & 15);
 
-		int channel_size = 4 * sizeof(THash);
+		int channel_size = 4;
 		int channel_mult = 0;
 		int iter = _in.x & 3;
 		THash sub_iter = _in.x - (iter * 64);
 		THash mask_r = mask << sub_iter;
 		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x0000000000000001);
 		channel_mult = 1;
 		iter = _in.y & 3;
 		sub_iter = _in.y - (iter * 64);
 		mask_r = mask << sub_iter;
 		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x0000000000000001);
 		channel_mult = 2;
 		iter = _in.z & 3;
 		sub_iter = _in.z - (iter * 64);
@@ -159,19 +163,21 @@ __device__ void THashAffineLookup(int4 input, THash *lookup, unsigned short orie
 	else if (orientation == 2)
 	{
 		THash mask = THash(0x8000000000000000);
-		int channel_size = 4 * sizeof(THash);
+		int channel_size = 4;
 		int channel_mult = 0;
 		int iter = 3 - (input.x & 3);
 		THash sub_iter = 64 - (input.x - (iter * 64));
 		THash mask_r = mask >> sub_iter;
 		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x8000000000000000);
 		channel_mult = 1;
 		iter = 3 - (input.y & 3);
 		sub_iter = 64 - (input.y - (iter * 64));
 		mask_r = mask >> sub_iter;
 		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x8000000000000000);
 		channel_mult = 2;
 		iter = 3 - (input.z & 3);
 		sub_iter = 64 - (input.z - (iter * 64));
@@ -188,19 +194,21 @@ __device__ void THashAffineLookup(int4 input, THash *lookup, unsigned short orie
 		_in.y = (16 * (input.y & 15)) + (input.y & 15);
 		_in.z = (16 * (input.z & 15)) + (input.z & 15);
 
-		int channel_size = 4 * sizeof(THash);
+		int channel_size = 4;
 		int channel_mult = 0;
 		int iter = _in.x & 3;
 		THash sub_iter = _in.x - (iter * 64);
 		THash mask_r = mask >> sub_iter;
 		r = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x8000000000000000);
 		channel_mult = 1;
 		iter = _in.y & 3;
 		sub_iter = _in.y - (iter * 64);
 		mask_r = mask >> sub_iter;
 		g = (mask_r & lookup[iter + (channel_mult*channel_size)]) * 255.0f;
 
+		mask = THash(0x8000000000000000);
 		channel_mult = 2;
 		iter = _in.z & 3;
 		sub_iter = _in.z - (iter * 64);
