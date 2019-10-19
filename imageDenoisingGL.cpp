@@ -587,8 +587,10 @@ int main(int argc, char **argv)
 
 		// Create Memory for Running Signature
 		// CUDA Malloc Array
-		/*std::string unique_key = "Saturday 2019-08 August-31__08:46:32.38948-pm Pacific Daylight time-phoneid:xxxxxxxxxxx-xxxxxxxx";*/
-		std::string unique_key = "Saturday \n\t\v\b\r\f\a\\\'\"~emb-25__21:13:56.482!@#$%^&*(){}:\"<>?ndard Time -phone:id:309uIUHkj??iusdHbx";
+		//std::string unique_key = "Saturday 2019-08 August-31__08:46:32.38948-pm Pacific Daylight time-phoneid:xxxxxxxxxxx-xxxxxxxx";
+		unsigned char unique_key[96] = "Saturday 2019-08 August-31__08:46:32.38948-pm Pacific Daylight time-phoneid:xxxxxxxxxx-xxxxxxxx";
+		//std::string unique_key = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+		//std::string unique_key = "Saturday \n\t\v\b\r\f\a\\\'\"~emb-25__21:13:56.482!@#$%^&*(){}:\"<>?ndard Time -phone:id:309uIUHkj??iusdHbx";
 		THash *hash = (THash*)malloc(sizeof(THash) * 12);
 		hash_generator::make_hash_from_key(unique_key, hash);
 
