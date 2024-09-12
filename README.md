@@ -1,7 +1,12 @@
-Movie Hasher
+# Movie Hasher
+The purpose of this research software is to create an algorithm to digitally sign video in a manner that would protect video from editing in these domains:
+* signal
+* shape
+* time
 
-LICENSE INFORMATION
-This software is development software. I do not offer a license to use this software. If you use code included in this repository, it is without permission and without license. This code is written without warranties or guarantees to anyone. This code is not included in any prior written agreements that author has signed and no prior written agreement or contract allows anyone use of this code, without express written consent to use this software and/or pieces therein
+## Purpose
+This is a timely and important research matter to avoid the spread of digital misinformation and the rise of AI generated, photorealistic videos--a true bane on a functioning democracy.
+
 
 Code derived on top of NVIDIA Sample: imageDenoising
 Minimum spec: SM 2.0
